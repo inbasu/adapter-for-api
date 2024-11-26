@@ -33,12 +33,19 @@ class Responce:
 
 
 class Client:
-    def __init__(self)-> None:
+    def __init__(self, username: str, password: str, auth_token:str, client_id: str)-> None:
         self._session: ClientSession | None = None
         self._token = ""
+        self.client_id = client_id
+        self._auth_token = auth_token
+        self._auth_params = {
+                "grant_type": "password",
+                "username": username,
+                "password": password,
+                }
 
-
-    def get_session(self) -> ClientSession:
+    @property
+    def session(self) -> ClientSession:
         if not self._session:
             self._session = ClientSession()
         return self._session
@@ -50,20 +57,20 @@ class Client:
 
 
     async def update_token(self) -> None:
-        async with self.get_session() as session:
+        async with self.session as session:
             async with session.get('') as resp:
                 self._token = await resp.json()
 
 
     @StatusCodeValidator.check
     async def get(self, url: str):
-        async with self.get_session().get(url) as resp:
+        async with self.session.get(url) as resp:
             return Responce(status_code=resp.status, data=await resp.text())
 
 
     @StatusCodeValidator.check
     async def post(self, url: str):
-        async with self.get_session() as session:
+        async with self.session as session:
             async with session.post(url) as resp:
                 return Responce(status_code=resp.status, data=await resp.text())
 
