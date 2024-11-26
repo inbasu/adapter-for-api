@@ -29,7 +29,7 @@ class Responce:
 
 
 
-class Connection:
+class Client:
     def __init__(self)-> None:
         self._session: ClientSession | None = None
 
