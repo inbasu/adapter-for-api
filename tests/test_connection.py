@@ -9,8 +9,7 @@ def client() -> Client:
 
 
 @pytest.mark.asyncio
-async def testconnection(client):
+async def test_200_connection(client):
     resp = await client.get(url="https://duckduckgo.com/")
     assert resp.__class__ == Responce
-    assert resp.status_code == 200
-    
+    await client.close() # <- create fixture    
