@@ -21,7 +21,6 @@ class StatusCodeValidator:
         return wrapper
 
 
-
 @dataclass
 class Responce:
     status_code: int
@@ -31,11 +30,11 @@ class Responce:
         return json.loads(self.data)
 
 
-
 class Client:
-    def __init__(self, username: str, password: str, auth_token:str, client_id: str)-> None:
+    def __init__(self, url: str, username: str, password: str, auth_token:str, client_id: str)-> None:
         self._session: ClientSession | None = None
         self._token = ""
+        self.url = url
         self.client_id = client_id
         self._auth_token = auth_token
         self._auth_params = {
@@ -47,7 +46,7 @@ class Client:
     @property
     def session(self) -> ClientSession:
         if not self._session:
-            self._session = ClientSession()
+            self._session = ClientSession(base_url=self.url)
         return self._session
     
 
@@ -58,21 +57,20 @@ class Client:
 
     async def update_token(self) -> None:
         async with self.session as session:
-            async with session.get('') as resp:
+            async with session.get("/", params=self._auth_params) as resp:
                 self._token = await resp.json()
 
 
     @StatusCodeValidator.check
-    async def get(self, url: str):
-        async with self.session.get(url) as resp:
+    async def get(self, url: str, params: dict) -> Responce:
+        async with self.session.get(url, params=params) as resp:
             return Responce(status_code=resp.status, data=await resp.text())
 
 
     @StatusCodeValidator.check
-    async def post(self, url: str):
-        async with self.session as session:
-            async with session.post(url) as resp:
-                return Responce(status_code=resp.status, data=await resp.text())
+    async def post(self, url: str, data: dict) -> Responce:
+        async with self.session.post(url, data=data) as resp:
+            return Responce(status_code=resp.status, data=await resp.text())
 
 
         
