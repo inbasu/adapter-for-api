@@ -36,7 +36,7 @@ class Client:
         self._token = ""
         self.url = url
         self.client_id = client_id
-        self._auth_token = auth_token
+        self._auth_header = {"Authorization": f"Basic {auth_token}"}
         self._auth_params = {
                 "grant_type": "password",
                 "username": username,
@@ -57,7 +57,7 @@ class Client:
 
     async def update_token(self) -> None:
         async with self.session as session:
-            async with session.get("/", params=self._auth_params) as resp:
+            async with session.get("/uaa/oauth/token", params=self._auth_params, headers=self._auth_header) as resp:
                 self._token = await resp.json()
 
 
