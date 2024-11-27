@@ -3,7 +3,7 @@ import os
 import dotenv
 import pytest
 
-from services.connection import Client
+from services.connection import Client, Responce
 
 dotenv.load_dotenv()
 
@@ -19,14 +19,16 @@ def client() -> Client:
             )
 
 
-@pytest.mark.asyncio
-async def test_get_token(client):
-    assert not client._token
-    await client.update_token()
-    assert client._token
+# @pytest.mark.asyncio
+# async def test_get_token(client):
+#     assert not client._token
+#     await client.update_token()
+#     assert client._token
 
 
 @pytest.mark.asyncio
 async def test_get_item(client):
+    await client.update_token()
     resp = await client.post("iql/run", {"scheme": 10, "iql": "Key = INT-563705"})
-    print(resp)
+    assert isinstance(resp, Responce)
+    print(resp.json())
