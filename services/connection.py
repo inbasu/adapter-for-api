@@ -58,18 +58,15 @@ class Client:
     async def update_token(self) -> None:
         async with self.session as session:
             async with session.get("/uaa/oauth/token", params=self._auth_params, headers=self._auth_header) as resp:
-                self._token = await resp.json()
-
-
-    @StatusCodeValidator.check
-    async def get(self, url: str, params: dict) -> Responce:
-        async with self.session.get(url, params=params) as resp:
-            return Responce(status_code=resp.status, data=await resp.text())
+                json_resp = await resp.json()
+                self._token = json_resp.get("access_token", "")
 
 
     @StatusCodeValidator.check
     async def post(self, url: str, data: dict) -> Responce:
-        async with self.session.post(url, data=data) as resp:
+        header = {"Authorization": f"Bearer {self._token}"}
+        async with self.session.post(url, data={"client_id": self.client_id, **data}, headers=header) as resp:
+            print(await resp.json())
             return Responce(status_code=resp.status, data=await resp.text())
 
 
