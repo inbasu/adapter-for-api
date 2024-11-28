@@ -1,7 +1,7 @@
 
 import pytest
 
-from database.connection import AsyncSession
+from database.connection import async_session
 from database.repository import EntityUOW
 from services.schemas import EntityScheme
 
@@ -22,7 +22,7 @@ client = client
 
 @pytest.mark.asyncio
 async def test_fill_table():
-    session = AsyncSession()
+    session = async_session()
     await EntityUOW.create_entity(session, EntityScheme(scheme=1, item_type=1, name="h"), [])
-    t = await EntityUOW.get_id_with_name(session=session, scheme=1, name="h")
-    print(t)
+    assert await EntityUOW.get_id_with_name(session=session, scheme=1, name="h") == 1
+
