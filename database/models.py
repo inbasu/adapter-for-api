@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Optional, Set
 
 from sqlalchemy import String
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.orm.properties import ForeignKey
 
 
@@ -15,6 +15,7 @@ class InsightEntity(Base):
     name: Mapped[str] = mapped_column(String(32))
     scheme: Mapped[int]
     type_id: Mapped[int]
+    fields: Mapped[Set["InsightField"]] = relationship(lazy="selectin")
 
 class InsightField(Base):
     __tablename__ = "fields"

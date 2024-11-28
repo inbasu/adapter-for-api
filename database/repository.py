@@ -1,3 +1,4 @@
+
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,16 +12,20 @@ class EntityUOW: # UoW не репозиторий
         querry = select(InsightEntity).filter(and_(InsightEntity.name==name, InsightEntity.scheme==scheme,))
         result = await session.execute(querry)
         if item := result.scalar():
+            print(item.fields)
             return item.type_id
         return None
     
+
 
     @classmethod
     async def create_entity(cls, session, entity: EntityScheme, fields: list[Field]) -> None:
         new = InsightEntity(type_id=entity.item_type, name=entity.name, scheme=entity.scheme)
         session.add(new)
-        session.add_all([InsightField(name=field.name, id=field.id, rel_to=new) for field in fields])
+        await session.flush()
+        session.add_all([InsightField(name=field.name, id=field.id, rel_to=new.pk) for field in fields])
         await session.commit() 
+
 
 
 
