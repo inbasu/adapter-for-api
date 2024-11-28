@@ -30,6 +30,7 @@ async def search(data: SearchRequest):
 
 
 
-@app.get("add/{scheme}/{type_id}")
-async def add_entity(scheme: int, type_id: int):
-    pass
+@app.get("objects/run")
+async def add_entity():
+    items = await Insight.objects(client)
+    return items

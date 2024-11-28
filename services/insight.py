@@ -18,7 +18,18 @@ class Insight:
         response = await client.post("iql/run", json_data)
         return response.json().get("objectEntries", [])
     
+    
+
+
+    @classmethod
+    async def objects(cls, client: Client):
+        json_data = {"scheme": 10, "method": "attributes", "objectTypeId": 155}
+        response = await client.post("objects/run", json_data)
+        return response.json()
+
+
     def decode(self, obj: dict[int, str], fields: dict) -> dict:
+
         result: dict[str, str] = {}
         return result
 
