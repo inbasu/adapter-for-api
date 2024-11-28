@@ -23,7 +23,7 @@ client = Client(
 
 @app.post("/iql/run")
 async def search(data: SearchRequest):
-    items = Insight.read(client, data)
+    items = await Insight.read(client, data)
     return items
 
 
