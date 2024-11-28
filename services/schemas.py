@@ -5,3 +5,13 @@ class SearchRequest(BaseModel):
     scheme: int 
     item_type: int | str
     iql: str
+
+
+class Field(BaseModel):
+    name: str
+    id: int
+
+class Entity(BaseModel):
+    scheme: int
+    type_id: int
+    name: str

@@ -25,9 +25,9 @@ class Handler:
 class Responce:
     status_code: int
     data: str
-
+    
     def json(self) -> dict:
-        return json.loads(self.data)
+        return json.loads(json.loads(self.data).get("result", {}))
 
 class Client:
     def __init__(self, url: str, username: str, password: str, auth_token:str, client_id: str)-> None:

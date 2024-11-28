@@ -1,22 +1,30 @@
-from fastapi import FastAPI
-from sqlalchemy.orm import Session
+import os
 
-from database.repository import Entity
+from dotenv import load_dotenv
+from fastapi import FastAPI
+
+from services.connection import Client
 from services.insight import Insight
 from services.schemas import SearchRequest
 
+load_dotenv()
+
+
 app = FastAPI()
-session = Session()
+client = Client(
+            username=os.getenv("NAME"), 
+            password=os.getenv("PWORD"), 
+            url=os.getenv("URL"),
+            client_id=os.getenv("CLIENT_ID"), 
+            auth_token=os.getenv("TOKEN"),
+            )
+
+
 
 @app.post("/iql/run")
 async def search(data: SearchRequest):
-    if isinstance(data.item_type, str): # при запросах в инсайт, мы используем номер схемы
-        item = Entity.get_id_with_name(session, name=data.item_type, scheme=data.scheme)
-        if item is None:
-            return [{}] # Bad reuest
-        data.item_type = item.type_id
-    return await Insight.read(client=None, data=data) 
-
+    items = Insight.read(client, data)
+    return items
 
 
 
