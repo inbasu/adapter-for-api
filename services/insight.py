@@ -1,6 +1,6 @@
 
 from .connection import Client
-from .schemas import SearchRequest
+from .schemas import Field, SearchRequest
 
 
 class Insight:
@@ -25,7 +25,10 @@ class Insight:
     async def objects(cls, client: Client):
         json_data = {"scheme": 10, "method": "attributes", "objectTypeId": 155}
         response = await client.post("objects/run", json_data)
-        return response.json()
+        return [Field(id=item["id"], name=item["name"]) for item in response.json()]
+
+
+
 
 
     def decode(self, obj: dict[int, str], fields: dict) -> dict:
