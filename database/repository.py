@@ -8,13 +8,13 @@ from services.schemas import EntityScheme, Field
 
 class EntityUOW: # UoW не репозиторий
     @classmethod
-    async def get_id_with_name(cls, session: AsyncSession, name: str, scheme: int) -> int | None:
+    async def get_id_and_fields(cls, session: AsyncSession, name: str, scheme: int):
         querry = select(InsightEntity).filter(and_(InsightEntity.name==name, InsightEntity.scheme==scheme,))
         result = await session.execute(querry)
         if item := result.scalar():
-            print(item.fields)
-            return item.type_id
-        return None
+            return item.type_id, 
+        return None, []
+    
     
 
 

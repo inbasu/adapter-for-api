@@ -32,7 +32,8 @@ class Insight:
 
 
     def decode(self, obj: dict[int, str], fields: dict) -> dict:
-
+        for attr in obj["attributes"]:
+            key = fields.get("attr")
         result: dict[str, str] = {}
         return result
 
