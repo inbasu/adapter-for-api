@@ -1,9 +1,10 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.connection import AsyncSession
+from database.connection import get_session
 from database.repository import EntityUOW
 from services.connection import Client
 from services.insight import Insight
@@ -24,8 +25,6 @@ client = Client(
 
 @app.post("/iql/run")
 async def search(data: SearchRequest):
-    if isinstance(data.item_type, str):
-        data.item_type = await EntityUOW.get_id_with_name(session=session, name=data.item_type, scheme=data.scheme)
     items = await Insight.read(client, data)
     return items
 
@@ -34,9 +33,9 @@ async def search(data: SearchRequest):
 
 
 @app.post("/objects/run")
-async def add_entity(entity: EntityScheme):
+async def add_entity(entity: EntityScheme, session: AsyncSession=Depends(get_session)):
     fields = await Insight.objects(client, entity)
-    await EntityUOW.create_entity(AsyncSession ,entity, fields)
+    await EntityUOW.create_entity(session ,entity, fields)
     return fields
 
 
