@@ -20,14 +20,12 @@ client = Client(
             client_id=os.getenv("CLIENT_ID"), 
             auth_token=os.getenv("TOKEN"),
             )
-session = AsyncSession()
 
 
 @app.post("/iql/run")
 async def search(data: SearchRequest):
     if isinstance(data.item_type, str):
-        entity = await EntityUOW.get_id_with_name(session=session, name=data.item_type, scheme=data.scheme)
-        data.item_type = entity.type_id
+        data.item_type = await EntityUOW.get_id_with_name(session=session, name=data.item_type, scheme=data.scheme)
     items = await Insight.read(client, data)
     return items
 
@@ -38,7 +36,7 @@ async def search(data: SearchRequest):
 @app.post("/objects/run")
 async def add_entity(entity: EntityScheme):
     fields = await Insight.objects(client, entity)
-    await EntityUOW.create_entity(session ,entity, fields)
+    await EntityUOW.create_entity(AsyncSession ,entity, fields)
     return fields
 
 
