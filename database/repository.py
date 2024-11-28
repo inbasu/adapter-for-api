@@ -2,7 +2,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import InsightEntity, InsightField
-from services.schemas import Field
+from services.schemas import EntityScheme, Field
 
 
 class EntityUOW: # UoW не репозиторий
@@ -14,12 +14,12 @@ class EntityUOW: # UoW не репозиторий
     
 
     @classmethod
-    async def load_entity(cls, session: AsyncSession, data: dict, fields: list[Field]) -> InsightEntity:
-        new = InsightEntity(*data)
-        for field in fields:
-            session.add(InsightField(name=field.name, id=field.id, rel_to=new.pk))
+    async def create_entity(cls, session: AsyncSession, entity: EntityScheme, fields: list[Field]) -> None:
+        new = InsightEntity(type_id=entity.item_type, name=entity.name, scheme=entity.scheme)
+        session.add(new)
+        session.add_all([InsightField(name=field.name, id=field.id, rel_to=new) for field in fields])
         await session.commit()
-        return new
+        return 
     
 
 

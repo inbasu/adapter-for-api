@@ -13,7 +13,7 @@ class InsightEntity(Base):
     
     pk: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(32))
-    schema: Mapped[int]
+    scheme: Mapped[int]
     type_id: Mapped[int]
 
 class InsightField(Base):
