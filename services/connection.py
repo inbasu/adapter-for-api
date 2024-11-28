@@ -5,21 +5,21 @@ from typing import Callable
 from aiohttp import ClientSession
 
 
-class StatusCodeValidator:
+class Handler:
 
     @staticmethod
-    def check(func) -> Callable:
-        async def wrapper(self, url:str, *args) -> Responce:
-            resp = await func(self, url, *args)
+    def status_code(func) -> Callable:
+        async def wrapper(self, url:str, *args, **kwargs) -> Responce:
+            resp = await func(self, url, *args, **kwargs)
             match resp.status_code:
                 case 200:
                     return resp
                 case 401:
-                    self.update_token()
-                    return await wrapper(self, url, *args)
+                    await self.update_token()
+                    return await func(self, url, *args)
             return Responce(resp.status_code, "")
         return wrapper
-
+        
 
 @dataclass
 class Responce:
@@ -29,11 +29,10 @@ class Responce:
     def json(self) -> dict:
         return json.loads(self.data)
 
-
 class Client:
     def __init__(self, url: str, username: str, password: str, auth_token:str, client_id: str)-> None:
         self._session: ClientSession | None = None
-        self._token = ""
+        self._token: str | None = None
         self.url = url
         self.client_id = client_id
         self._auth_header = {"Authorization": f"Basic {auth_token}"}
@@ -61,8 +60,10 @@ class Client:
             self._token = json_resp.get("access_token", "")
 
 
-    @StatusCodeValidator.check
+    @Handler.status_code
     async def post(self, url: str, data: dict) -> Responce:
+        if not self._token: # вынести в отдельную функцию
+            await self.update_token()
         header = {"Authorization": f"Bearer {self._token}"}
         async with self.session.post(url, json={"client_id": self.client_id, **data}, headers=header) as resp:
             return Responce(status_code=resp.status, data=await resp.text())

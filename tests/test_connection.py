@@ -28,7 +28,8 @@ def client() -> Client:
 
 @pytest.mark.asyncio
 async def test_get_item(client):
-    await client.update_token()
     resp = await client.post("iql/run", {"scheme": 10, "iql": "Key = INT-563705"})
     assert isinstance(resp, Responce)
     assert resp.status_code == 200
+
+

@@ -16,3 +16,5 @@ class Insight:
     
     def decode(self, obj: dict[int, str], fields: dict) -> dict:
         return {fields[key]: value for key,value in obj.items()}
+
+
