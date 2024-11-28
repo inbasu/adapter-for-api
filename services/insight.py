@@ -1,6 +1,6 @@
 
 from .connection import Client
-from .schemas import Field, SearchRequest
+from .schemas import EntityScheme, Field, SearchRequest
 
 
 class Insight:
@@ -22,8 +22,8 @@ class Insight:
 
 
     @classmethod
-    async def objects(cls, client: Client):
-        json_data = {"scheme": 10, "method": "attributes", "objectTypeId": 155}
+    async def objects(cls, client: Client, entity: EntityScheme):
+        json_data = {"scheme": entity.scheme, "method": "attributes", "objectTypeId": entity.item_type}
         response = await client.post("objects/run", json_data)
         return [Field(id=item["id"], name=item["name"]) for item in response.json()]
 

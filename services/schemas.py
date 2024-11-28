@@ -6,6 +6,11 @@ class SearchRequest(BaseModel):
     item_type: int | str
     iql: str
 
+class EntityScheme(BaseModel):
+    scheme: int
+    item_type: int
+    name: str
+
 
 class Field(BaseModel):
     name: str

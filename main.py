@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from services.connection import Client
 from services.insight import Insight
-from services.schemas import SearchRequest
+from services.schemas import EntityScheme, SearchRequest
 
 load_dotenv()
 
@@ -30,7 +30,9 @@ async def search(data: SearchRequest):
 
 
 
-@app.get("objects/run")
-async def add_entity():
-    items = await Insight.objects(client)
-    return items
+@app.post("/objects/run")
+async def add_entity(entity: EntityScheme):
+    fields = await Insight.objects(client, entity)
+    return fields
+
+
