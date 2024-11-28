@@ -11,6 +11,7 @@ class Insight:
                 "iql": data.iql,
                 "scheme": data.scheme,
                 "options":{
+                    "includeAttributes": True,
                     "includeAttributesDeep": 1, # без этого атрибута не отображаются связанные поля
                 }
             }
