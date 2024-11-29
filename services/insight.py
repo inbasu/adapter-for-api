@@ -41,16 +41,12 @@ class Insight:
     @classmethod
     def decode(cls, raw_object: dict) -> ObjectResponse:
         obj = ObjectResponse(id=raw_object["id"], attrs=[])
-        # Переделать на инпейс
         for attr in raw_object["attributes"]:
-            value = ObjectAttr(id=attr["objectTypeAttributeId"], name="", ref=None, values=[])      
-            for a in attr["objectAttributeValues"]:
-                if a["referencedType"]:
-                    value.ref = a["referencedObject"]["objectType"]["id"]
-                    value.values.append(AttrValue(id=a["referencedObject"]['id'], label=a["displayValue"]))
-                else:
-                    value.values.append(AttrValue(id=None, label=a["displayValue"]))
-            obj.attrs.append(value)
+            object_attr = ObjectAttr(id=attr["objectTypeAttributeId"], name="", ref=None, values=[])      
+            for val in attr["objectAttributeValues"]:
+                object_attr.values.append(AttrValue(id=val["referencedObject"]['id'] if object_attr.ref else None, 
+                                                    label=val["displayValue"]))
+            obj.attrs.append(object_attr)
         return obj
 
 
