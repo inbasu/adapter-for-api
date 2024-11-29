@@ -62,6 +62,7 @@ class Client:
 
     @Handler.status_code
     async def post(self, url: str, data: dict) -> Responce:
+        print(self.url)
         if not self._token: # вынести в отдельную функцию
             await self.update_token()
         header = {"Authorization": f"Bearer {self._token}"}
