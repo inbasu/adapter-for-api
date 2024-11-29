@@ -1,7 +1,8 @@
 from typing import Any
 
 from .connection import Client
-from .schemas import FieldScheme, GetObjectData
+from .schemas import (AttrValue, FieldScheme, GetObjectData, ObjectAttr,
+                      ObjectResponse)
 
 
 class Insight:    
@@ -13,19 +14,19 @@ class Insight:
                 "options": {
                     "page": page,
                     "resultPerPage": result_per_page,
-                    "includeAtributes": True,
-                    "includeAtributesDeep": deep,
+                    "includeAttributes": True,
+                    "includeAttributesDeep": deep,
                     },
                 }
 
 
 
     @classmethod
-    async def get_object(cls, client: Client, data: GetObjectData) -> dict:
+    async def get_object(cls, client: Client, data: GetObjectData) -> ObjectResponse | None:
         json =  cls.form_json(scheme=data.scheme, iql=f"objectId = {data.object_id}", page=1, result_per_page=1)
         result = await client.post('iql/run',data=json)
         raw_object = result.json()
-        return raw_object.get("objectEntries", [{}])[0]
+        return cls.decode(raw_object["objectEntries"][0]) if raw_object.get("objectEntries", None) else None
 
 
     @classmethod
@@ -38,37 +39,24 @@ class Insight:
 
 
     @classmethod
-    def decode(cls, raw_object: dict, fields: dict) -> dict[str, dict]:
+    def decode(cls, raw_object: dict) -> ObjectResponse:
+        obj = ObjectResponse(id=raw_object["id"], attrs=[])
         # Переделать на инпейс
-
-        result: dict[str, dict] = {}
-        
-
-
         for attr in raw_object["attributes"]:
-            key: str = fields.get(attr["objectAtributeId"])
-            value: dict[str, Any] = {"value": [], "rederence": None}
-            for a in attr["objectAtributeValues"]:
+            value = ObjectAttr(id=attr["objectTypeAttributeId"], name="", ref=None, values=[])      
+            for a in attr["objectAttributeValues"]:
                 if a["referencedType"]:
-                    value["reference"] = 1 
-                    value["value"].append({"label": a["displayValue"], "id": 123321})
+                    value.ref = a["referencedObject"]["objectType"]["id"]
+                    value.values.append(AttrValue(id=a["referencedObject"]['id'], label=a["displayValue"]))
                 else:
-                    pass
-            result[key] = value
-        return result
+                    value.values.append(AttrValue(id=None, label=a["displayValue"]))
+            obj.attrs.append(value)
+        return obj
+
 
     @classmethod
     def decode_field(cls, field: dict) -> FieldScheme:
         return FieldScheme(id=field["id"], name=field["name"], ref=field.get("referenceObjectTypeId", None))
     
 
-# a = {
-# "id": 12332,
-# "attrs":[{
-#     "name": 'some name',        
-#     "id": 3123123,
-#     "value": [{"label":"some", "id": 123123}],
-#     "reference": 321321,
-#     }]
-# }
-# print(a)
+
