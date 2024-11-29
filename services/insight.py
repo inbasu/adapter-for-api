@@ -1,35 +1,29 @@
+from typing import Any
+
 from .connection import Client
-from .schemas import EntityScheme, Field, SearchRequest
+from .schemas import GetObjectData
 
 
 class Insight:
-
-    @classmethod
-    async def read(cls, client: Client, data: SearchRequest) -> list[dict]:
-        json_data = {
-                "iql": data.iql,
-                "scheme": data.scheme,
-                "options":{
-                    "includeAttributes": True,
-                    "includeAttributesDeep": 1, # без этого атрибута не отображаются связанные поля
-                }
-            }
-        response = await client.post("iql/run", json_data)
-        return response.json().get("objectEntries", [])
     
     @classmethod
-    async def objects(cls, client: Client, entity: EntityScheme):
-        json_data = {"scheme": entity.scheme, "method": "attributes", "objectTypeId": entity.item_type}
-        response = await client.post("objects/run", json_data)
-        return [Field(id=item["id"], name=item["name"]) for item in response.json()]
+    def form_json(cls, scheme: int, iql: str,result_per_page:int ,page: int, deep: int=1) -> dict[str, Any]:
+        return {
+                "scheme": scheme,
+                "iql": iql,
+                "options": {
+                    "page": page,
+                    "resultPerPage": result_per_page,
+                    "includeAtributes": True,
+                    "includeAtributesDeep": deep,
+                    },
+                }
 
-    def decode(self, obj: dict[int, str], fields: dict) -> dict:
-        for attr in obj["attributes"]:
-            key = fields.get("attr")
-        result: dict[str, str] = {}
-        return result
 
 
     @classmethod
-    def encode(cls):
-        pass
+    async def get_object(cls, client: Client, data: GetObjectData) -> dict:
+        json =  cls.form_json(scheme=data.scheme, iql=f"objectId = {data.object_id}", page=1, result_per_page=1)
+        result = await client.post('iql/run',data=json)
+        raw_object = result.json()
+        return raw_object
