@@ -1,7 +1,7 @@
 from typing import Any
 
 from .connection import Client
-from .schemas import GetObjectData
+from .schemas import FieldScheme, GetObjectData
 
 
 class Insight:    
@@ -28,10 +28,11 @@ class Insight:
         return raw_object.get("objectEntries", [{}])[0]
 
 
-#     @classmethod
-#     async def get_objects(cls, client: Client, data: GetManyObjectsData) -> list[dict]:
-#         json = cls.form_json()
-#         result = await client.post("iql/run", data=json)
+    @classmethod
+    async def get_object_fields(cls, client: Client, data: GetObjectData):
+        json = {"scheme": data.scheme, "method": "attributes", "objectTypeId": data.object_id}
+        result = await client.post("objects/run", data=json)
+        return [cls.decode_field(field) for field in result.json()]
 
 
 
@@ -56,16 +57,18 @@ class Insight:
             result[key] = value
         return result
 
-        
+    @classmethod
+    def decode_field(cls, field: dict) -> FieldScheme:
+        return FieldScheme(id=field["id"], name=field["name"], ref=field.get("referenceObjectTypeId", None))
     
 
-a = {
-"id": 12332,
-"attrs":[{
-    "name": 'some name',        
-    "id": 3123123,
-    "value": [{"label":"some", "id": 123123}],
-    "reference": 321321,
-    }]
-}
-print(a)
+# a = {
+# "id": 12332,
+# "attrs":[{
+#     "name": 'some name',        
+#     "id": 3123123,
+#     "value": [{"label":"some", "id": 123123}],
+#     "reference": 321321,
+#     }]
+# }
+# print(a)
