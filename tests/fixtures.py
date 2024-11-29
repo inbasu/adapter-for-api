@@ -8,7 +8,6 @@ from services.connection import Client
 
 @pytest.fixture(scope="session")
 def client():
-    print(os.getenv("URL"))
     load_dotenv()
     return Client(
             username=os.getenv("NAME",''), 
