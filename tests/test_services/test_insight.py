@@ -11,7 +11,7 @@ async def test_get_item(client: Client):
     obj = await Insight.get_object(client, data= GetObjectData(scheme=10, object_id=563705))
     assert isinstance(obj, ObjectResponse)
     assert obj.id == 563705
-    print(obj)
+    assert obj.attrs
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_object_fields(client: Client):
