@@ -26,8 +26,8 @@ class Insight:
         # перенести fields внутрь локиги класса
         json =  cls.form_json(scheme=data.scheme, iql=f"objectId = {data.object_id}", page=1, result_per_page=1)
         result = await client.post('iql/run',data=json)
-        raw_object = result.json()
-        return cls.decode(raw_object["objectEntries"][0], fields) if raw_object.get("objectEntries", None) else None
+        raw_object = result.json().get("objectEntries")
+        return cls.decode(raw_object[0], fields) if raw_object else None
 
 
     @classmethod
