@@ -33,3 +33,5 @@ class ObjectAttr(BaseModel):
 class ObjectResponse(BaseModel):
     id: int
     attrs: list[ObjectAttr]
+
+

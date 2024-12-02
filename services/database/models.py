@@ -1,5 +1,5 @@
 
-from sqlalchemy import String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -22,3 +22,5 @@ class Field(Base):
     pk: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(32))
     id: Mapped[int]
+    rel: Mapped[int]
+    entity: Mapped[Entity] = mapped_column(ForeignKey("entities.pk"))
