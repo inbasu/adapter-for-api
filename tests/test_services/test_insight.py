@@ -8,8 +8,7 @@ from tests.fixtures import client  # noqa: F401
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_item(client: Client):
-    fields = {f.id: f for f in await Insight.get_object_fields(client, GetObjectData(scheme=10, object_id=155))}
-    obj = await Insight.get_object(client, data= GetObjectData(scheme=10, object_id=563705), fields=fields)
+    obj = await Insight.get_object(client, data= GetObjectData(scheme=10, object_id=563705))
     assert isinstance(obj, ObjectResponse)
     assert obj.id == 563705
 

@@ -6,6 +6,7 @@ from .schemas import (AttrValue, FieldScheme, GetObjectData, ObjectAttr,
 
 
 class Insight:    
+
     @classmethod
     def form_json(cls, scheme: int, iql: str,result_per_page:int ,page: int, deep: int=1) -> dict[str, Any]:
         return {
@@ -22,21 +23,26 @@ class Insight:
 
 
     @classmethod
-    async def get_object(cls, client: Client, data: GetObjectData, fields:dict[int, FieldScheme]) -> ObjectResponse | None:
+    async def get_object(cls, client: Client, data: GetObjectData) -> ObjectResponse | None:
         # перенести fields внутрь локиги класса
         json =  cls.form_json(scheme=data.scheme, iql=f"objectId = {data.object_id}", page=1, result_per_page=1)
         result = await client.post('iql/run',data=json)
-        raw_object = result.json().get("objectEntries")
-        return cls.decode(raw_object[0], fields) if raw_object else None
-
+        if raw_data := result.json():
+            return cls.decode(raw_data.get("objectEntries")[0], {f["id"]: cls.decode_field(f) for f in raw_data.get("objectTypeAttributes")})
+        return None
 
     @classmethod
-    async def get_object_fields(cls, client: Client, data: GetObjectData):
+    async def get_object_fields(cls, client: Client, data: GetObjectData) -> list[FieldScheme]:
         json = {"scheme": data.scheme, "method": "attributes", "objectTypeId": data.object_id}
         result = await client.post("objects/run", data=json)
         return [cls.decode_field(field) for field in result.json()]
 
 
+
+    @classmethod
+    def decode_field(cls, field: dict) -> FieldScheme:
+        return FieldScheme(id=field["id"], name=field["name"], ref=field.get("referenceObjectTypeId", None))
+    
 
 
     @classmethod
@@ -52,10 +58,5 @@ class Insight:
             obj.attrs.append(object_attr)
         return obj
 
-
-    @classmethod
-    def decode_field(cls, field: dict) -> FieldScheme:
-        return FieldScheme(id=field["id"], name=field["name"], ref=field.get("referenceObjectTypeId", None))
-    
-
+            
 
