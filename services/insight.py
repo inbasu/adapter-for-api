@@ -38,7 +38,7 @@ class Insight:
         result = await client.post("iql/run", data=json)
         if raw_data := result.json():
             fields = {f["id"]: cls.decode_field(f) for f in raw_data.get("objectTypeAttributes")}
-            return [cls.decode(obj, fields) for obj in raw_data.get("objectTypeAttributes")]
+            return [cls.decode(obj, fields) for obj in raw_data.get("objectEntries")]
         return []
 
     @classmethod
