@@ -1,8 +1,8 @@
 from typing import Any
 
 from .connection import Client
-from .schemas import (AttrValue, FieldScheme, GetObjectData, ObjectAttr,
-                      ObjectResponse)
+from .schemas import (AttrValue, FieldScheme, GetIQLData, GetObjectData,
+                      ObjectAttr, ObjectResponse)
 
 
 class Insight:    
@@ -28,8 +28,18 @@ class Insight:
         json =  cls.form_json(scheme=data.scheme, iql=f"objectId = {data.object_id}", page=1, result_per_page=1)
         result = await client.post('iql/run',data=json)
         if raw_data := result.json():
-            return cls.decode(raw_data.get("objectEntries")[0], {f["id"]: cls.decode_field(f) for f in raw_data.get("objectTypeAttributes")})
+            fields = {f["id"]: cls.decode_field(f) for f in raw_data.get("objectTypeAttributes")}
+            return cls.decode(raw_data.get("objectEntries")[0], fields)
         return None
+    
+    @classmethod
+    async def get_objects(cls, client: Client, data: GetIQLData) -> list[ObjectResponse]:
+        json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=100, page=1)
+        result = await client.post("iql/run", data=json)
+        if raw_data := result.json():
+            fields = {f["id"]: cls.decode_field(f) for f in raw_data.get("objectTypeAttributes")}
+            return [cls.decode(obj, fields) for obj in raw_data.get("objectTypeAttributes")]
+        return []
 
     @classmethod
     async def get_object_fields(cls, client: Client, data: GetObjectData) -> list[FieldScheme]:

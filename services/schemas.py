@@ -8,6 +8,8 @@ class Object(BaseModel):
 class GetObjectData(Object):
     object_id: int
 
+class GetIQLData(Object):
+    iql:str 
 
 class FieldScheme(BaseModel):
     id: int
