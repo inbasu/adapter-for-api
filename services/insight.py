@@ -57,7 +57,7 @@ class Insight:
 
     @classmethod
     def decode(cls, raw_object: dict, fields: dict[int, FieldScheme]) -> ObjectResponse:
-        obj = ObjectResponse(id=raw_object["id"], attrs=[])
+        obj = ObjectResponse(id=raw_object["id"], label=raw_object["label"], attrs=[])
         for attr in raw_object["attributes"]:
             object_attr = ObjectAttr(id=attr["objectTypeAttributeId"], 
                                      name=fields[attr["objectTypeAttributeId"]].name, 

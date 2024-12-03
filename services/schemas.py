@@ -34,6 +34,7 @@ class ObjectAttr(BaseModel):
 
 class ObjectResponse(BaseModel):
     id: int
+    label: str
     attrs: list[ObjectAttr]
 
 
