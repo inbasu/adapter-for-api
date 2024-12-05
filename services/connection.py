@@ -16,7 +16,7 @@ class Handler:
                     return resp
                 case 401:
                     await self.update_token()
-                    return await func(self, url, *args)
+                    return await func(self, url, *args, **kwargs)
             return Responce(resp.status_code, "")
         return wrapper
         
@@ -62,10 +62,9 @@ class Client:
 
     @Handler.status_code
     async def post(self, url: str, data: dict) -> Responce:
-        if not self._token: # вынести в отдельную функцию
-            await self.update_token()
         header = {"Authorization": f"Bearer {self._token}"}
         async with self.session.post(url, json={"client_id": self.client_id, **data}, headers=header) as resp:
+            print(resp.status)
             return Responce(status_code=resp.status, data=await resp.text())
 
 
