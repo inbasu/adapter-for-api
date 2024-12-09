@@ -5,6 +5,11 @@ from typing import Callable
 from aiohttp import ClientSession
 
 
+class ClientCredentialsError(Exception):
+    pass
+
+
+
 class Handler:
 
     @staticmethod
@@ -68,4 +73,8 @@ class Client:
             return Responce(status_code=resp.status, data=await resp.text())
 
 
-        
+    @classmethod
+    def new(cls, url: str, username: str, password: str, auth_token: str, client_id: str) -> "Client":
+        if not all([url, username, password, auth_token, client_id]):
+            raise ClientCredentialsError 
+        return cls(url, username, password, auth_token, client_id)

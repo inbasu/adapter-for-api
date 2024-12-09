@@ -1,3 +1,4 @@
+
 from pydantic import BaseModel
 
 
@@ -10,6 +11,11 @@ class GetObjectData(Object):
 
 class GetIQLData(Object):
     iql:str 
+
+class GetJoinedData(GetIQLData):
+    joined_iql: str
+    on: str
+    
 
 class FieldScheme(BaseModel):
     id: int
@@ -36,5 +42,11 @@ class ObjectResponse(BaseModel):
     id: int
     label: str
     attrs: list[ObjectAttr]
+    joined: list["ObjectResponse"] = []
+    
 
-
+    def get_field_values(self, field_name: str) -> list[AttrValue]:
+        for attr in self.attrs:
+            if attr.name == field_name:
+                return attr.values
+        return []

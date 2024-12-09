@@ -4,14 +4,12 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from routers.main import main_router
 from services.connection import Client
-from services.insight import Insight
-from services.schemas import GetIQLData, GetObjectData
 
+# Create dependency
 load_dotenv()
-
-app = FastAPI()
-client = Client(
+client = Client.new(
             username=getenv("NAME",''), 
             password=getenv("PWORD", ''), 
             url=getenv("URL", ''),
@@ -21,16 +19,11 @@ client = Client(
 
 
 
+app = FastAPI()
+# Config
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"])
 
+# Routers
+app.include_router(main_router)
 
-
-
-@app.post('/get')
-async def get_object(data: GetObjectData):
-    return await Insight.get_object(client, data)
-
-@app.post('/iql')
-async def iql_run(data: GetIQLData):
-    return await Insight.get_objects(client, data)
 
