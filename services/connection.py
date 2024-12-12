@@ -1,8 +1,10 @@
 import json
 from dataclasses import dataclass
+from os import getenv
 from typing import Callable
 
 from aiohttp import ClientSession
+from dotenv import load_dotenv
 
 
 class ClientCredentialsError(Exception):
@@ -78,3 +80,16 @@ class Client:
         if not all([url, username, password, auth_token, client_id]):
             raise ClientCredentialsError 
         return cls(url, username, password, auth_token, client_id)
+
+
+
+
+load_dotenv()
+client = Client.new(
+            username=getenv("NAME",''), 
+            password=getenv("PWORD", ''), 
+            url=getenv("URL", ''),
+            client_id=getenv("CLIENT_ID", ''), 
+            auth_token=getenv("TOKEN", ''),
+            )
+

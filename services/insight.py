@@ -42,12 +42,13 @@ class Insight:
     @classmethod
     async def get_joined(cls, client: Client, data: GetJoinedData) -> list[ObjectResponse]:
         main_json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=100, page=1)
-        joined_json = cls.form_json(scheme=data.scheme, iql=f'objectTypeId={data.joined_iql} AND object HAVING outboundReferences({data.iql})', result_per_page=100, page=1)
+        joined_json = cls.form_json(scheme=data.scheme, iql=f'{data.joined_iql} AND object HAVING outboundReferences({data.iql})', result_per_page=100, page=1)
         main, join = await asyncio.gather(
                 client.post('iql/run', data=main_json),
                 client.post('iql/run', data=joined_json),
                 )
         result: list[ObjectResponse] = cls.decode_objects(main)
+
         if to_join := cls.decode_objects(join):
             for obj in result:
                 for rel in to_join:
