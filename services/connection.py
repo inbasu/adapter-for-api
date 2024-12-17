@@ -71,7 +71,6 @@ class Client:
     async def post(self, url: str, data: dict) -> Responce:
         header = {"Authorization": f"Bearer {self._token}"}
         async with self.session.post(url, json={"client_id": self.client_id, **data}, headers=header) as resp:
-            print(resp.status)
             return Responce(status_code=resp.status, data=await resp.text())
 
 

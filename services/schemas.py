@@ -1,3 +1,4 @@
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -22,6 +23,10 @@ class FieldScheme(BaseModel):
     name: str
     ref: int | None
 
+
+class UpdateObjectData(GetObjectData):
+    object_type_id: int
+    attrs: dict[int, list[Any]]
 
 
 

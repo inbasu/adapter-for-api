@@ -3,7 +3,8 @@ from typing import Any
 
 from .connection import Client, Responce
 from .schemas import (AttrValue, FieldScheme, GetIQLData, GetJoinedData,
-                      GetObjectData, ObjectAttr, ObjectResponse)
+                      GetObjectData, ObjectAttr, ObjectResponse,
+                      UpdateObjectData)
 
 
 class Insight:    
@@ -57,6 +58,25 @@ class Insight:
         return result
 
 
+    @classmethod
+    async def update_object(cls, client:Client, data):
+        json = {"scheme": data.scheme, "objectTypeId": data.object_type_id, "objectId": data.object_id, 
+                "attributes": [{"objectTypeAttributeId": id, 
+                                "objectAttributeValues": [{"value": value} for value in values]}
+                               for id, values in data.attrs.items()]}
+        result = await client.post('update/run', data=json)
+        if raw_data := result.json():
+            return cls.decode_updated(raw_data)
+        return None
+
+        
+
+
+    @classmethod
+    async def create_object(cls, client: Client, data: UpdateObjectData):
+        pass
+
+
 
     @classmethod
     async def get_object_fields(cls, client: Client, data: GetObjectData) -> list[FieldScheme]:
@@ -92,4 +112,17 @@ class Insight:
         return obj
 
             
+    @classmethod
+    def decode_updated(cls, raw_object: dict) -> ObjectResponse:
+        obj = ObjectResponse(id=raw_object["id"], label=raw_object['label'], attrs=[])
+        for attr in raw_object["attributes"]:
+            object_attr = ObjectAttr(id=attr["objectTypeAttributeId"],
+                                     name=attr["objectTypeAttribute"]['name'],
+                                     ref=attr.get("referenceObjectTypeId", None), values=[]
+                                     )
+            for val in attr["objectAttributeValues"]:
+                object_attr.values.append(AttrValue(id=val["referencedObject"]['id'] if object_attr.ref else None,
+                                                    label=val["displayValue"]))
+            obj.attrs.append(object_attr)
+        return obj
 
