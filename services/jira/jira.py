@@ -6,5 +6,5 @@ class Jira:
 
     @classmethod
     async def get_issues(cls, client: JiraAPIClient, params: dict[str, str]) -> list[Issue]:
-        result = client.get("search/", params=params)        
+        result = await client.get("search/", params=params)        
         return result
