@@ -2,7 +2,7 @@ import pytest
 
 from services.jira.connections.api_connection import JiraAPIClient
 from services.jira.jira import Jira
-from tests.fixtures import insight_mars_client as client  # noqa: F401
+from tests.fixtures import jira_api_client as client  # noqa: F401
 
 
 @pytest.mark.asyncio(loop_scope="session")
