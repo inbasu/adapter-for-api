@@ -1,9 +1,15 @@
+
 import asyncio
+import mimetypes
 from typing import Any
 
-from .connection import Client, Responce
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+
+from services.insight.connections.api_connerction import InsightAPIClient
+
+from .connections.mars_connection import InsightMarsClient, Responce
 from .schemas import (AttrValue, FieldScheme, GetIQLData, GetJoinedData,
-                      GetObjectData, ObjectAttr, ObjectResponse,
+                      GetObjectData, InsightObject, ObjectAttr,
                       UpdateObjectData)
 
 
@@ -23,9 +29,8 @@ class Insight:
                 }
 
 
-
     @classmethod
-    async def get_object(cls, client: Client, data: GetObjectData) -> ObjectResponse | None:
+    async def get_object(cls, client: InsightMarsClient, data: GetObjectData) -> InsightObject | None:
         # перенести fields внутрь локиги класса
         json =  cls.form_json(scheme=data.scheme, iql=f"objectId = {data.object_id}", page=1, result_per_page=1)
         result = await client.post('iql/run',data=json)
@@ -35,20 +40,20 @@ class Insight:
         return None
     
     @classmethod
-    async def get_objects(cls, client: Client, data: GetIQLData) -> list[ObjectResponse]:
+    async def get_objects(cls, client: InsightMarsClient, data: GetIQLData) -> list[InsightObject]:
         json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=100, page=1)
         result = await client.post("iql/run", data=json)
         return cls.decode_objects(result)
 
     @classmethod
-    async def get_joined(cls, client: Client, data: GetJoinedData) -> list[ObjectResponse]:
+    async def get_joined(cls, client: InsightMarsClient, data: GetJoinedData) -> list[InsightObject]:
         main_json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=100, page=1)
         joined_json = cls.form_json(scheme=data.scheme, iql=f'{data.joined_iql} AND object HAVING outboundReferences({data.iql})', result_per_page=100, page=1)
         main, join = await asyncio.gather(
                 client.post('iql/run', data=main_json),
                 client.post('iql/run', data=joined_json),
                 )
-        result: list[ObjectResponse] = cls.decode_objects(main)
+        result: list[InsightObject] = cls.decode_objects(main)
 
         if to_join := cls.decode_objects(join):
             for obj in result:
@@ -59,34 +64,54 @@ class Insight:
 
 
     @classmethod
-    async def update_object(cls, client:Client, data):
+    async def update_object(cls, client: InsightMarsClient, data: UpdateObjectData) -> InsightObject | None:
         json = {"scheme": data.scheme, "objectTypeId": data.object_type_id, "objectId": data.object_id, 
                 "attributes": [{"objectTypeAttributeId": id, 
                                 "objectAttributeValues": [{"value": value} for value in values]}
                                for id, values in data.attrs.items()]}
         result = await client.post('update/run', data=json)
         if raw_data := result.json():
-            return cls.decode_updated(raw_data)
+            return cls.decode_upd_or_cr(raw_data)
         return None
 
         
 
 
     @classmethod
-    async def create_object(cls, client: Client, data: UpdateObjectData):
+    async def create_object(cls, client: InsightMarsClient, data: UpdateObjectData) -> InsightObject | None:
+        json = {"scheme": data.scheme, "objectTypeId": data.object_type_id,
+                "attributes": [{"objectTypeAttributeId": id, 
+                                "objectAttributeValues": [{"value": value for value in values}]}
+                               for id, values in data.attrs.items()]}
+        result = await client.post('create/run', data=json)
+        if raw_data := result.json():
+            return cls.decode_upd_or_cr(raw_data)
+        return None
+
+
+
+    @classmethod
+    async def add_attachment(cls, client: InsightAPIClient, data, file, name, mimetype):
+        mimetypes.init()
+        json = MultipartEncoder({'encodedComment': '', "file": (name, file, mimetype)})
+        result = await client.post('', data=data, content_type=json.content_type)
+        print(result)
+    
+    @classmethod
+    async def download_attachment(cls, client: InsightAPIClient, url: str):
         pass
 
 
 
     @classmethod
-    async def get_object_fields(cls, client: Client, data: GetObjectData) -> list[FieldScheme]:
+    async def get_object_fields(cls, client: InsightMarsClient, data: GetObjectData) -> list[FieldScheme]:
         json = {"scheme": data.scheme, "method": "attributes", "objectTypeId": data.object_id}
         result = await client.post("objects/run", data=json)
         return [cls.decode_field(field) for field in result.json()]
 
 
     @classmethod
-    def decode_objects(cls, data: Responce) -> list[ObjectResponse]:
+    def decode_objects(cls, data: Responce) -> list[InsightObject]:
         if raw_data := data.json():
             fields = {f["id"]: cls.decode_field(f) for f in raw_data.get("objectTypeAttributes", [])}
             return [cls.decode(obj, fields) for obj in raw_data.get("objectEntries", [])]
@@ -99,8 +124,8 @@ class Insight:
 
 
     @classmethod
-    def decode(cls, raw_object: dict, fields: dict[int, FieldScheme]) -> ObjectResponse:
-        obj = ObjectResponse(id=raw_object["id"], label=raw_object["label"], attrs=[])
+    def decode(cls, raw_object: dict, fields: dict[int, FieldScheme]) -> InsightObject:
+        obj = InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
         for attr in raw_object["attributes"]:
             object_attr = ObjectAttr(id=attr["objectTypeAttributeId"], 
                                      name=fields[attr["objectTypeAttributeId"]].name,
@@ -113,8 +138,8 @@ class Insight:
 
             
     @classmethod
-    def decode_updated(cls, raw_object: dict) -> ObjectResponse:
-        obj = ObjectResponse(id=raw_object["id"], label=raw_object['label'], attrs=[])
+    def decode_upd_or_cr(cls, raw_object: dict) -> InsightObject:
+        obj = InsightObject(id=raw_object["id"], label=raw_object['label'], attrs=[])
         for attr in raw_object["attributes"]:
             object_attr = ObjectAttr(id=attr["objectTypeAttributeId"],
                                      name=attr["objectTypeAttribute"]['name'],
@@ -125,4 +150,3 @@ class Insight:
                                                     label=val["displayValue"]))
             obj.attrs.append(object_attr)
         return obj
-

@@ -1,21 +1,21 @@
 import pytest
 
-from services.connection import Client
-from services.insight import Insight
-from services.schemas import (FieldScheme, GetObjectData, ObjectResponse,
-                              UpdateObjectData)
-from tests.fixtures import client  # noqa: F401
+from services.insight.connections.mars_connection import InsightMarsClient
+from services.insight.insight import Insight
+from services.insight.schemas import (FieldScheme, GetObjectData,
+                                      InsightObject, UpdateObjectData)
+from tests.fixtures import insight_mars_client as client  # noqa: F401
 
 
 @pytest.mark.asyncio(loop_scope="session")
-async def test_get_item(client: Client):
+async def test_get_item(client: InsightMarsClient):
     obj = await Insight.get_object(client, data= GetObjectData(scheme=10, object_id=563705))
-    assert isinstance(obj, ObjectResponse)
+    assert isinstance(obj, InsightObject)
     assert obj.id == 563705
 
     
 @pytest.mark.asyncio(loop_scope="session")
-async def test_get_object_fields(client: Client):
+async def test_get_object_fields(client: InsightMarsClient):
     obj = GetObjectData(scheme=10, object_id=155)
     fields = await Insight.get_object_fields(client, obj)
     assert isinstance(fields, list)
@@ -24,7 +24,7 @@ async def test_get_object_fields(client: Client):
 
 
 @pytest.mark.asyncio(loop_scope="session")
-async def test_update_object(client: Client):
+async def test_update_object(client: InsightMarsClient):
     reverse_state = {"Working": 383219, "Free": 383223}
     obj = await Insight.get_object(client, data= GetObjectData(scheme=10, object_id=563705))
     data = UpdateObjectData(scheme=10, object_type_id=155, object_id=563705,

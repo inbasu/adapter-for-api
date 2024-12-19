@@ -26,7 +26,7 @@ class FieldScheme(BaseModel):
 
 class UpdateObjectData(GetObjectData):
     object_type_id: int
-    attrs: dict[int, list[Any]]
+    attrs: dict[int|str, list[Any]]
 
 
 
@@ -36,6 +36,7 @@ class UpdateObjectData(GetObjectData):
 class AttrValue(BaseModel):
     id: int | None
     label: str
+    
 
 class ObjectAttr(BaseModel):
     id: int
@@ -43,11 +44,11 @@ class ObjectAttr(BaseModel):
     values: list[AttrValue] 
     ref: int | None
 
-class ObjectResponse(BaseModel):
+class InsightObject(BaseModel):
     id: int
     label: str
     attrs: list[ObjectAttr]
-    joined: list["ObjectResponse"] = []
+    joined: list["InsightObject"] = []
     
 
     def get_field_values(self, field_name: str) -> list[AttrValue]:
