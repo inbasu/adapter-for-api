@@ -8,5 +8,5 @@ jira_router = APIRouter()
 
 
 @jira_router.post('/issues')
-async def get_object(jql):
-    return await Jira.get_issues(client=jira_api_client, params={"jql": jql})
+async def get_object(jql: dict[str,str]):
+    return await Jira.get_issues(client=jira_api_client, params=jql)
