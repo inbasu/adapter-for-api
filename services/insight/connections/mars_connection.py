@@ -6,7 +6,7 @@ from .utils import Handler, Responce
 
 
 class InsightMarsClient(InsightClient):
-    url = "https://api.metronom.dev/ru-insight/"
+    url = "https://api.metronom.dev"
 
     def __init__(self, username: str, password: str, auth_token:str, client_id: str)-> None:
         self._token: str | None = None
@@ -20,15 +20,16 @@ class InsightMarsClient(InsightClient):
 
 
     async def update_token(self) -> None:
-        async with self.session.get("/uaa/oauth/token", params=self._auth_params, headers=self._auth_header) as resp:
-            json_resp = await resp.json()
-            self._token = json_resp.get("access_token", "")
+        resp = await self.session.get("/uaa/oauth/token", params=self._auth_params, headers=self._auth_header)
+        json_resp = resp.json()
+        self._token = json_resp.get("access_token", "")
 
 
     @Handler.status_code
     async def post(self, url: str, data: dict, content_type="application/json") -> Responce:
         headers = {"Content-Type": content_type, "Authorization": f"Bearer {self._token}"}
-        async with self.session.post(url, json={"client_id": self.client_id, **data}, headers=headers) as resp:
-            return Responce(status_code=resp.status, data=await resp.text())
+        resp = await self.session.post(f'/ru-insight/{url}', json={"client_id": self.client_id, **data}, headers=headers)
+        return Responce(status_code=resp.status_code, data=resp.text)
+
 
 

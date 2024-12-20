@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from aiohttp import ClientSession
+from httpx import AsyncClient
 
 
 class ClientCredentialsError(Exception):
@@ -20,19 +20,19 @@ class Responce:
 
 class InsightClient(ABC):
     
-    _session: ClientSession | None = None
+    _session: AsyncClient | None = None
     url: str
 
     @property
-    def session(self) -> ClientSession:
+    def session(self) -> AsyncClient:
         if not self._session:
-            self._session = ClientSession(base_url=self.url)
+            self._session = AsyncClient(base_url=self.url)
         return self._session
 
 
     async def close(self) -> None:
         if self._session:
-            await self._session.close()
+            await self._session.aclose()
 
 
     @abstractmethod
