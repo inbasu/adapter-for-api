@@ -11,11 +11,12 @@ class ClientCredentialsError(Exception):
 @dataclass
 class Responce:
     status_code: int
-    data: str
+    data: str | dict | list
     
-    def json(self) -> dict:
-        return json.loads(json.loads(self.data).get("result", {}))
-
+    def json(self) -> dict | list:
+        if not isinstance(self.data, (list, dict)):
+            return json.loads(json.loads(self.data).get("result", {}))
+        return self.data
 
 
 class JiraClient(ABC):
