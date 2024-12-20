@@ -18,3 +18,11 @@ async def test_get_objects():
         resp = await client.post('/iql', json={"scheme": 10, "iql": "Name like !test"})
         assert resp.status_code == 200
         assert len(resp.json()) > 10
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_get_issues():
+    async with AsyncClient(app=app, base_url="http://testserver") as client:
+        resp = await client.post('/issues', json={"jql": "key=IT-797207"})
+        assert resp.status_code == 200
+        assert resp.json()[0]["key"] == "IT-797207"
+
