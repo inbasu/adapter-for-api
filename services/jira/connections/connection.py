@@ -14,7 +14,7 @@ class Responce:
     data: str | dict | list
     
     def json(self) -> dict | list:
-        if not isinstance(self.data, (list, dict)):
+        if isinstance(self.data, str):
             return json.loads(json.loads(self.data).get("result", {}))
         return self.data
 

@@ -11,4 +11,4 @@ class JiraAPIClient(JiraClient):
 
     async def get(self, url: str, params: dict) -> Responce:
         resp = await self.session.get(url=url, params=params, auth=self._auth)
-        return Responce(resp.status_code, resp.text)
+        return Responce(resp.status_code, resp.json())
