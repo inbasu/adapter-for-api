@@ -3,7 +3,7 @@ from services.jira.connections.connection import JiraClient, Responce
 
 
 class JiraAPIClient(JiraClient):
-    url = 'http://jira.metro-cc.ru/rest/api/2/'
+    url = 'https://jira.metro-cc.ru/rest/api/2/'
     
     def __init__(self, username: str, password: str) -> None:
         self._auth = (username, password)
