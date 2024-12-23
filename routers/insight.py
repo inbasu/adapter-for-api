@@ -30,3 +30,7 @@ async def update_object(data:UpdateObjectData):
     return await Insight.update_object(client=mars_client, data=data)
 
 
+@insight_router.post("/add_attachment")
+async def add_attachment():
+    return await Insight.add_attachment()
+

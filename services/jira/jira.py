@@ -10,3 +10,39 @@ class Jira:
 
 
 
+    @classmethod
+    async def create_issue(cls, client: JiraAPIClient, project: int,  issue_type: str|int, data: dict):
+        result = await client.post('issue/')
+        json = {
+                "fields": {
+                    "issuetype": issue_type,
+                    "project": {"id": project},
+                    **cls.form_create_fields(data),
+                    }
+                }
+
+    @classmethod
+    async def add_label(cls):
+        pass
+
+    @classmethod
+    async def add_component(cls):
+        pass
+
+    @classmethod
+    async def add_comment(cls):
+        pass
+
+    @classmethod
+    async def add_attachment(cls):
+        pass
+
+
+    @classmethod
+    def form_create_fields(cls, data: dict) -> dict:
+        result = {}
+        # expect only one value
+        for field, value in data.items:
+            pass
+        return result
+

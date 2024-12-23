@@ -95,7 +95,7 @@ class Insight:
         mimetypes.init()
         json = MultipartEncoder({'encodedComment': '', "file": (name, file, mimetype)})
         result = await client.post('', data=data, content_type=json.content_type)
-        print(result)
+        return result
     
     @classmethod
     async def download_attachment(cls, client: InsightAPIClient, url: str):
