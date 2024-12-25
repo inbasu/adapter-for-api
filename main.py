@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.insight import insight_router
 from routers.jira import jira_router
 
-app = FastAPI(root_path='/api/mars')
+app = FastAPI(root_path='/api')
 # Config
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"])
 
