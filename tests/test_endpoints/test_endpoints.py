@@ -1,3 +1,6 @@
+
+import base64
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -20,9 +23,10 @@ async def test_get_objects():
         assert len(resp.json()) > 10
 
 @pytest.mark.asyncio(loop_scope="session")
-async def test_get_issues():
+async def test_add_attachment():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
-        resp = await client.post('/issues', json={"jql": "key=IT-797207"})
+        with open("tests/test_services/e.jpeg", "rb") as f:
+            a = base64.b64encode(f.read()).decode("utf-8")
+        resp = await client.post('/add_attachment', json={"project": "it", "issue": "IT-797793", "name": "e.jpeg", "source": a})
         assert resp.status_code == 200
-        assert resp.json()[0]["key"] == "IT-797207"
-
+        assert not resp.json()["error"]
