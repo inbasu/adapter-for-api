@@ -9,7 +9,7 @@ load_dotenv()
 
 
 insight_mars_client =  MarsClient(
-            url=getenv("MARS_UR", ''),
+            url=getenv("MARS_URL", ''),
             username=getenv("INSIGHT_MARS_USERNAME",''), 
             password=getenv("INSIGHT_MARS_PASSWORD", ''), 
             client_id=getenv("INSIGHT_MARS_CLIENT_ID", ''), 
