@@ -15,13 +15,20 @@ class Responce:
     
     def json(self):
         try:
+            # Try пробует обрабоать респонс, как будто это MARS респонс!
             return json.loads(json.loads(self.data).get("result", {}))
+        except KeyError:
+            return {}
         except json.JSONDecodeError:
             return json.loads(self.data)
 
 
 
 class Client(ABC):
+
+    def __init__(self, *args, **kwargs):
+        if not all(args):
+            raise ClientCredentialsError("Присутствуют аргументы с нулеым значением, проверьте .env")
     
     _session: AsyncClient | None = None
     url: str

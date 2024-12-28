@@ -6,9 +6,10 @@ from .utils import Handler, Responce
 
 
 class MarsClient(Client):
-    url: str = "https://api.metronom.dev"
 
-    def __init__(self, username: str, password: str, auth_token:str, client_id: str)-> None:
+    def __init__(self, url: str, username: str, password: str, auth_token:str, client_id: str)-> None:
+        super().__init__(url, username, password, auth_token, client_id)
+        self.url = url
         self._token: str | None = None
         self.client_id = client_id
         self._auth_header = {"Authorization": f"Basic {auth_token}"}
