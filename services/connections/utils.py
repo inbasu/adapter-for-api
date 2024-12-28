@@ -7,7 +7,7 @@ class Handler:
 
     @staticmethod
     def status_code(func) -> Callable:
-        async def wrapper(self, url:str, *args, **kwargs) -> Responce:
+        async def wrapper(self, url: str, *args, **kwargs) -> Responce:
             resp = await func(self, url, *args, **kwargs)
             match resp.status_code:
                 case 200:
@@ -16,4 +16,5 @@ class Handler:
                     await self.update_token()
                     return await func(self, url, *args, **kwargs)
             return Responce(resp.status_code, "")
+
         return wrapper
