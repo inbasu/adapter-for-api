@@ -45,17 +45,17 @@ class Insight:
 
     @classmethod
     async def get_objects(cls, client: MarsClient, data: GetIQLData) -> list[InsightObject]:
-        json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=100, page=1)
+        json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=1000, page=1)
         result = await client.post("/ru-insight/iql/run", data=json)
         return cls.decode_objects(result)
 
     @classmethod
     async def get_joined(cls, client: MarsClient, data: GetJoinedData) -> list[InsightObject]:
-        main_json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=100, page=1)
+        main_json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=1000, page=1)
         joined_json = cls.form_json(
             scheme=data.scheme,
             iql=f"{data.joined_iql} AND object HAVING outboundReferences({data.iql})",
-            result_per_page=100,
+            result_per_page=1000,
             page=1,
         )
         main, join = await asyncio.gather(

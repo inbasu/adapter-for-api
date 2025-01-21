@@ -21,7 +21,7 @@ async def get_objects(data: GetIQLData):
 async def get_joined(data: GetJoinedData):
     result = await Insight.get_joined(client=insight_mars_client, data=data)
     for item in result:
-        item.joined = [max(item.joined, key=lambda i: i.id)] if item.joined else []
+        item.joined = sorted(item.joined, key=lambda i: i.id)
     return result
 
 

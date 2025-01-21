@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from httpx import AsyncClient
+from httpx import AsyncClient, Timeout
 
 
 class ClientCredentialsError(Exception):
@@ -36,7 +36,7 @@ class Client(ABC):
     @property
     def session(self) -> AsyncClient:
         if not self._session:
-            self._session = AsyncClient(base_url=self.url)
+            self._session = AsyncClient(base_url=self.url, timeout=Timeout(10, read=None))
         return self._session
 
     async def close(self) -> None:
