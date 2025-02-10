@@ -2,47 +2,44 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from httpx import AsyncClient, Timeout
+from httpx import URL, AsyncClient
+from httpx import Response as R
 
 
 class ClientCredentialsError(Exception):
     pass
 
 
-@dataclass
-class Responce:
-    status_code: int
-    data: str
+class Response:
+    def __init__(self, response: R) -> None:
+        self.status_code = response.status_code
+        self.data = self._form_data(response)
 
-    def json(self):
-        try:
-            # Try пробует обрабоать респонс, как будто это MARS респонс!
-            return json.loads(json.loads(self.data).get("result", {}))
-        except KeyError:
-            return {}
-        except json.JSONDecodeError:
-            return json.loads(self.data)
+    def _form_data(self, response) -> dict:
+        if response.status_code == 200:
+            try:
+                return json.loads(response.json().get("result"))
+            except json.JSONDecodeError:
+                return json.loads(response.text)
+        return response.json()
 
 
 class Client(ABC):
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, url: str, *args, **kwargs):
         if not all(args):
             raise ClientCredentialsError("Присутствуют аргументы с нулеым значением, проверьте .env")
-
-    _session: AsyncClient | None = None
-    url: str
+        self._url = URL(url)
+        self._the_session: AsyncClient | None = None
 
     @property
-    def session(self) -> AsyncClient:
-        if not self._session:
-            self._session = AsyncClient(base_url=self.url, timeout=Timeout(10, read=None))
-        return self._session
+    @abstractmethod
+    def _session(self) -> AsyncClient:
+        pass
 
     async def close(self) -> None:
-        if self._session:
+        if self._the_session:
             await self._session.aclose()
 
     @abstractmethod
-    async def post(self, url: str, data: dict, content_type: str) -> Responce:
+    async def post(self, url: str, data: dict, content_type: str = "application/json") -> Response:
         pass

@@ -3,32 +3,10 @@ from typing import Any
 from pydantic import BaseModel
 
 
-class Object(BaseModel):
-    scheme: int
-
-
-class GetObjectData(Object):
-    object_id: int
-
-
-class GetIQLData(Object):
-    iql: str
-
-
-class GetJoinedData(GetIQLData):
-    joined_iql: str
-    on: str
-
-
 class FieldScheme(BaseModel):
     id: int
     name: str
     ref: int | None
-
-
-class UpdateObjectData(GetObjectData):
-    object_type_id: int
-    attrs: dict[int | str, list[Any]]
 
 
 # Схемы для формирвания объекта
@@ -55,3 +33,6 @@ class InsightObject(BaseModel):
             if attr.name == field_name:
                 return attr.values
         return []
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, self.__class__) and self.id == other.id

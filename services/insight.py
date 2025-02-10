@@ -2,136 +2,88 @@ import asyncio
 import mimetypes
 from typing import Any
 
-from requests_toolbelt.multipart.encoder import MultipartEncoder
+from httpx import AsyncClient
 
-from .connections.insight_api_connection import InsightAPIClient
-from .connections.mars_connection import MarsClient, Responce
-from .schemas.insight_schemas import (
-    AttrValue,
-    FieldScheme,
-    GetIQLData,
-    GetJoinedData,
-    GetObjectData,
-    InsightObject,
-    ObjectAttr,
-    UpdateObjectData,
-)
+from services.connections.connection import Client
+
+from .schemas.insight_schemas import AttrValue, FieldScheme, InsightObject, ObjectAttr
 
 
-class Insight:
+class MetroInsight:
+    """Object(s) methods"""
 
     @classmethod
-    def form_json(cls, scheme: int, iql: str, result_per_page: int, page: int, deep: int = 1) -> dict[str, Any]:
-        return {
+    async def create_object(cls, client: Client, scheme: int, type_id, attrs: dict) -> InsightObject | None:
+        json = {"scheme": scheme, "objectTypeId": type_id, "attributes": cls._form_attributes(attrs)}
+        print(json["attributes"])
+        response = await client.post("/create/run", data=json)
+        print(response.status_code)
+        print(response.data)
+        if response.status_code == 200:
+            try:
+                return cls._decode_create_object(response.data)
+            except KeyError:
+                return None
+        return None
+
+    @classmethod
+    async def get_objects(
+        cls, client: Client, scheme: int, iql: str, page: int = 1, results: int = 500
+    ) -> list[InsightObject]:
+        json = {
             "scheme": scheme,
             "iql": iql,
             "options": {
                 "page": page,
-                "resultPerPage": result_per_page,
+                "resultPerPage": results,
                 "includeAttributes": True,
-                "includeAttributesDeep": deep,
+                "includeAttributesDeep": 1,
             },
         }
-
-    @classmethod
-    async def get_object(cls, client: MarsClient, data: GetObjectData) -> InsightObject | None:
-        # перенести fields внутрь локиги класса
-        json = cls.form_json(scheme=data.scheme, iql=f"objectId = {data.object_id}", page=1, result_per_page=1)
-        result = await client.post("/ru-insight/iql/run", data=json)
-        if raw_data := result.json():
-            fields = {f["id"]: cls.decode_field(f) for f in raw_data.get("objectTypeAttributes", [])}
-            return cls.decode(raw_data.get("objectEntries")[0], fields)
-        return None
-
-    @classmethod
-    async def get_objects(cls, client: MarsClient, data: GetIQLData) -> list[InsightObject]:
-        json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=1000, page=1)
-        result = await client.post("/ru-insight/iql/run", data=json)
-        return cls.decode_objects(result)
-
-    @classmethod
-    async def get_joined(cls, client: MarsClient, data: GetJoinedData) -> list[InsightObject]:
-        main_json = cls.form_json(scheme=data.scheme, iql=data.iql, result_per_page=1000, page=1)
-        joined_json = cls.form_json(
-            scheme=data.scheme,
-            iql=f"{data.joined_iql} AND object HAVING outboundReferences({data.iql})",
-            result_per_page=1000,
-            page=1,
-        )
-        main, join = await asyncio.gather(
-            client.post("/ru-insight/iql/run", data=main_json),
-            client.post("/ru-insight/iql/run", data=joined_json),
-        )
-        result: list[InsightObject] = cls.decode_objects(main)
-
-        if to_join := cls.decode_objects(join):
-            for obj in result:
-                for rel in to_join:
-                    if obj.id in [r.id for r in rel.get_field_values(data.on)]:
-                        obj.joined.append(rel)
-        return result
-
-    @classmethod
-    async def update_object(cls, client: MarsClient, data: UpdateObjectData) -> InsightObject | None:
-        json = {
-            "scheme": data.scheme,
-            "objectTypeId": data.object_type_id,
-            "objectId": data.object_id,
-            "attributes": [
-                {"objectTypeAttributeId": id, "objectAttributeValues": [{"value": value} for value in values]}
-                for id, values in data.attrs.items()
-            ],
-        }
-        result = await client.post("/ru-insight/update/run", data=json)
-        if raw_data := result.json():
-            return cls.decode_upd_or_cr(raw_data)
-        return None
-
-    @classmethod
-    async def create_object(cls, client: MarsClient, data: UpdateObjectData) -> InsightObject | None:
-        json = {
-            "scheme": data.scheme,
-            "objectTypeId": data.object_type_id,
-            "attributes": [
-                {"objectTypeAttributeId": id, "objectAttributeValues": [{"value": value for value in values}]}
-                for id, values in data.attrs.items()
-            ],
-        }
-        result = await client.post("/ru-insight/create/run", data=json)
-        if raw_data := result.json():
-            return cls.decode_upd_or_cr(raw_data)
-        return None
-
-    @classmethod
-    async def add_attachment(cls, client: InsightAPIClient, data, file, name, mimetype):
-        mimetypes.init()
-        json = MultipartEncoder({"encodedComment": "", "file": (name, file, mimetype)})
-        result = await client.post("", data=data, content_type=json.content_type)
-        return result
-
-    @classmethod
-    async def download_attachment(cls, client: InsightAPIClient, url: str):
-        pass
-
-    @classmethod
-    async def get_object_fields(cls, client: MarsClient, data: GetObjectData) -> list[FieldScheme]:
-        json = {"scheme": data.scheme, "method": "attributes", "objectTypeId": data.object_id}
-        result = await client.post("/ru-insight/objects/run", data=json)
-        return [cls.decode_field(field) for field in result.json()]
-
-    @classmethod
-    def decode_objects(cls, data: Responce) -> list[InsightObject]:
-        if raw_data := data.json():
-            fields = {f["id"]: cls.decode_field(f) for f in raw_data.get("objectTypeAttributes", [])}
-            return [cls.decode(obj, fields) for obj in raw_data.get("objectEntries", [])]
+        response = await client.post("/iql/run", data=json)
+        if response.status_code == 200:
+            fields = {f["id"]: cls._decode_field(f) for f in response.data.get("objectTypeAttributes", [])}
+            entries = response.data.get("objectEntries", [])
+            return [cls._decode_get_object(obj, fields) for obj in entries]
         return []
 
     @classmethod
-    def decode_field(cls, field: dict) -> FieldScheme:
+    async def update_object(
+        cls, client: Client, scheme: int, type_id: int, object_id: int, attrs: dict
+    ) -> InsightObject | None:
+        json = {
+            "scheme": scheme,
+            "objectTypeId": type_id,
+            "objectId": object_id,
+            "attributes": cls._form_attributes(attrs),
+        }
+        response = await client.post("/update/run", data=json)
+        if response.status_code == 200:
+            return cls._decode_update_object(response.data)
+        return None
+
+    @classmethod
+    def _decode_field(cls, field: dict) -> FieldScheme:
         return FieldScheme(id=field["id"], name=field["name"], ref=field.get("referenceObjectTypeId", None))
 
     @classmethod
-    def decode(cls, raw_object: dict, fields: dict[int, FieldScheme]) -> InsightObject:
+    def _form_attributes(cls, attrs: dict) -> list[dict]:
+        return [
+            {
+                "objectTypeAttributeId": id,
+                "objectAttributeValues": [
+                    [{"value": value} for value in values] if isinstance(values, list) else {"value": values}
+                ],
+            }
+            for id, values in attrs.items()
+        ]
+
+    @classmethod
+    def _decode_create_object(cls, raw_object: dict) -> InsightObject:
+        return InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
+
+    @classmethod
+    def _decode_get_object(cls, raw_object: dict, fields: dict[int, FieldScheme]) -> InsightObject:
         obj = InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
         for attr in raw_object["attributes"]:
             object_attr = ObjectAttr(
@@ -148,7 +100,7 @@ class Insight:
         return obj
 
     @classmethod
-    def decode_upd_or_cr(cls, raw_object: dict) -> InsightObject:
+    def _decode_update_object(cls, raw_object: dict) -> InsightObject:
         obj = InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
         for attr in raw_object["attributes"]:
             object_attr = ObjectAttr(
