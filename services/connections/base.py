@@ -26,7 +26,9 @@ class Response:
 
 class Client(ABC):
     def __init__(self, url: str, *args, **kwargs):
-        if not all(args):
+        if not all([url, *args, *kwargs.values()]):
+            print(args)
+            print(kwargs)
             raise ClientCredentialsError("Присутствуют аргументы с нулеым значением, проверьте .env")
         self._url = URL(url)
         self._the_session: AsyncClient | None = None
@@ -34,7 +36,7 @@ class Client(ABC):
     @property
     @abstractmethod
     def _session(self) -> AsyncClient:
-        pass
+        """Create session if doesn't exit"""
 
     async def close(self) -> None:
         if self._the_session:
@@ -42,4 +44,4 @@ class Client(ABC):
 
     @abstractmethod
     async def post(self, url: str, data: dict, content_type: str = "application/json") -> Response:
-        pass
+        """Make post request"""
