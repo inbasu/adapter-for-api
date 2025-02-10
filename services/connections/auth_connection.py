@@ -3,7 +3,7 @@ from httpx import AsyncClient, BasicAuth
 from services.connections.connection import Client, Response
 
 
-class MarsClient(Client):
+class WebHooksClient(Client):
     def __init__(self, url: str, username: str, password: str, client_id: str) -> None:
         super().__init__(url)
         self._client_id = client_id
