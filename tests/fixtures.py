@@ -23,7 +23,7 @@ def insight_mars_client():
 def insight_hooks_client():
     load_dotenv()
     return WebHooksClient(
-        url=os.getenv("MARS_URL", ""),
+        url=os.getenv("INSIGHT_HOOKS_URL", ""),
         client_id=os.getenv("INSIGHT_MARS_CLIENT_ID", ""),
         username=os.getenv("ASSET_USER_NAME", ""),
         password=os.getenv("ASSET_PASSWORD", ""),
