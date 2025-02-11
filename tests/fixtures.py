@@ -1,7 +1,7 @@
 import pytest
 
-from services.insight import Insight, Interface
 from services.insight_repository.repository import InsightMetroRepository
+from services.repository_factories import Insight, Interface
 
 
 @pytest.fixture(scope="session")
