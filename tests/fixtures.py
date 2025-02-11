@@ -11,4 +11,4 @@ def mars_insight() -> MetroRepository:
 
 @pytest.fixture(scope="session")
 def web_hooks_insight() -> MetroRepository:
-    return Insight.create(Interface.WEB_HOOK, scheme=10)
+    return Insight.create(Interface.WEB_HOOKS, scheme=10)
