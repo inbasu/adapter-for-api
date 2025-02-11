@@ -1,7 +1,7 @@
 import pytest
 
 from services.insight_repository.schemas import InsightObject
-from tests.fixtures import web_hooks_insight as client  # noqa: F401
+from tests.fixtures import web_hooks_insight  # noqa: F401
 
 
 @pytest.mark.web_hooks
