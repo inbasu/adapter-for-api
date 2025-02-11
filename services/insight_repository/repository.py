@@ -3,7 +3,13 @@ from services.connections.base import Client
 from .schemas import AttrValue, FieldScheme, InsightObject, ObjectAttr
 
 
-class MetroRepository:
+class InsightMetroRepository:
+    """
+    #TODO
+    1 - upload_attachment - нет эндпоинта
+    2 - get_attachment - нет эндпоинта
+    """
+
     """Object(s) methods"""
 
     def __init__(self, client: Client, scheme: int) -> None:
@@ -50,6 +56,16 @@ class MetroRepository:
             return self._decode_update_object(response.data)
         return None
 
+    """ Attachment methods """
+
+    async def get_attachment(self):
+        raise NotImplementedError()
+
+    async def upload_attachment(self):
+        raise NotImplementedError()
+
+    """ Some inclass logic methods """
+
     def _decode_field(self, field: dict) -> FieldScheme:
         return FieldScheme(id=field["id"], name=field["name"], ref=field.get("referenceObjectTypeId", None))
 
@@ -68,6 +84,7 @@ class MetroRepository:
         return InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
 
     def _decode_get_object(self, raw_object: dict, fields: dict[int, FieldScheme]) -> InsightObject:
+        # переделать под чистый ретурн
         obj = InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
         for attr in raw_object["attributes"]:
             object_attr = ObjectAttr(
@@ -84,6 +101,7 @@ class MetroRepository:
         return obj
 
     def _decode_update_object(self, raw_object: dict) -> InsightObject:
+        # переделать прод чистый ретурн
         obj = InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
         for attr in raw_object["attributes"]:
             object_attr = ObjectAttr(
