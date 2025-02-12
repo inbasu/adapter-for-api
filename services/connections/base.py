@@ -1,9 +1,21 @@
 import json
+import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from httpx import URL, AsyncClient
 from httpx import Response as R
+
+
+class Singletone:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(Singletone, cls).__new__(cls)
+            return cls._instance
 
 
 class ClientCredentialsError(Exception):
@@ -25,6 +37,8 @@ class Response:
 
 
 class Client(ABC):
+    """Клиент предпочтителен с сессией и при токене предпочтительно синглтон"""
+
     def __init__(self, url: str, *args, **kwargs):
         if not all([url, *args, *kwargs.values()]):
             print(args)
