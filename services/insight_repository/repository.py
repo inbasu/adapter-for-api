@@ -1,9 +1,34 @@
+from abc import ABC, abstractmethod
+
 from services.connections.base import Client
+from services.insight_repository.formatters import Formatter
 
 from .schemas import AttrValue, FieldScheme, InsightObject, ObjectAttr
 
 
-class InsightMetroRepository:
+class Unit(ABC):
+    _client: Client
+    _scheme: int
+    _formatter: Formatter
+
+    @abstractmethod
+    async def create_object(self, type_id: int, attrs: dict) -> InsightObject | None:
+        """ """
+
+    @abstractmethod
+    async def get_objects(self, iql: str, page: int, results: int) -> list:
+        """ """
+
+    @abstractmethod
+    async def update_object(self, type_id: int, object_id: int, attrs: dict) -> InsightObject | None:
+        """ """
+
+    @abstractmethod
+    async def delete_object(self, object_id: int):
+        pass
+
+
+class InsightMetroUnit(Unit):
     """
     #TODO
     1 - upload_attachment - нет эндпоинта
@@ -12,19 +37,15 @@ class InsightMetroRepository:
 
     """Object(s) methods"""
 
-    def __init__(self, client: Client, scheme: int) -> None:
+    def __init__(self, client: Client, scheme: int, formatter: Formatter) -> None:
         self._client = client
+        self._formatter = formatter
         self._scheme = scheme
 
-    async def create_object(self, type_id, attrs: dict) -> InsightObject | None:
+    async def create_object(self, type_id: int, attrs: dict) -> InsightObject | None:
         json = {"scheme": self._scheme, "objectTypeId": type_id, "attributes": self._form_attributes(attrs)}
         response = await self._client.post("/create/run", data=json)
-        if response.status_code == 200:
-            try:
-                return self._decode_create_object(response.data)
-            except KeyError:
-                return None
-        return None
+        return self._formatter.decode_create_object(response.data)
 
     async def get_objects(self, iql: str, page: int = 1, results: int = 500) -> list[InsightObject]:
         json = {
@@ -39,10 +60,9 @@ class InsightMetroRepository:
         }
         response = await self._client.post("/iql/run", data=json)
         if response.status_code == 200:
-            fields = {f["id"]: self._decode_field(f) for f in response.data.get("objectTypeAttributes", [])}
+            fields = {f["id"]: self._formatter.decode_field(f) for f in response.data.get("objectTypeAttributes", [])}
             entries = response.data.get("objectEntries", [])
-            return [self._decode_get_object(obj, fields) for obj in entries]
-        return []
+            return [self._formatter.decode_get_object(obj, fields) for obj in entries]
 
     async def update_object(self, type_id: int, object_id: int, attrs: dict) -> InsightObject | None:
         json = {
@@ -52,9 +72,10 @@ class InsightMetroRepository:
             "attributes": self._form_attributes(attrs),
         }
         response = await self._client.post("/update/run", data=json)
-        if response.status_code == 200:
-            return self._decode_update_object(response.data)
-        return None
+        return self._formatter.decode_update_object(response.data)
+
+    async def delete_object(self, object_id: int):
+        pass
 
     """ Attachment methods """
 
@@ -66,9 +87,6 @@ class InsightMetroRepository:
 
     """ Some inclass logic methods """
 
-    def _decode_field(self, field: dict) -> FieldScheme:
-        return FieldScheme(id=field["id"], name=field["name"], ref=field.get("referenceObjectTypeId", None))
-
     def _form_attributes(self, attrs: dict) -> list[dict]:
         return [
             {
@@ -79,40 +97,3 @@ class InsightMetroRepository:
             }
             for id, values in attrs.items()
         ]
-
-    def _decode_create_object(self, raw_object: dict) -> InsightObject:
-        return InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
-
-    def _decode_get_object(self, raw_object: dict, fields: dict[int, FieldScheme]) -> InsightObject:
-        # переделать под чистый ретурн
-        obj = InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
-        for attr in raw_object["attributes"]:
-            object_attr = ObjectAttr(
-                id=attr["objectTypeAttributeId"],
-                name=fields[attr["objectTypeAttributeId"]].name,
-                ref=fields[attr["objectTypeAttributeId"]].ref,
-                values=[],
-            )
-            for val in attr["objectAttributeValues"]:
-                object_attr.values.append(
-                    AttrValue(id=val["referencedObject"]["id"] if object_attr.ref else None, label=val["displayValue"])
-                )
-            obj.attrs.append(object_attr)
-        return obj
-
-    def _decode_update_object(self, raw_object: dict) -> InsightObject:
-        # переделать прод чистый ретурн
-        obj = InsightObject(id=raw_object["id"], label=raw_object["label"], attrs=[])
-        for attr in raw_object["attributes"]:
-            object_attr = ObjectAttr(
-                id=attr["objectTypeAttributeId"],
-                name=attr["objectTypeAttribute"]["name"],
-                ref=attr.get("referenceObjectTypeId", None),
-                values=[],
-            )
-            for val in attr["objectAttributeValues"]:
-                object_attr.values.append(
-                    AttrValue(id=val["referencedObject"]["id"] if object_attr.ref else None, label=val["displayValue"])
-                )
-            obj.attrs.append(object_attr)
-        return obj

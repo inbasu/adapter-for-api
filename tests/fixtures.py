@@ -1,14 +1,14 @@
 import pytest
 
-from services.insight_repository.repository import InsightMetroRepository
-from services.repository_factories import Insight, Interface
+from services.insight_repository.repository import InsightMetroUnit
+from services.repository_factories import Formatter, Insight, Interface
 
 
 @pytest.fixture(scope="session")
-def mars_insight() -> InsightMetroRepository:
-    return Insight.create(Interface.MARS_INSIGHT, scheme=10)
+def mars_insight() -> InsightMetroUnit:
+    return Insight.create(Interface.MARS_INSIGHT, scheme=10, formatter=Formatter.ATTRS_IN_LIST)
 
 
 @pytest.fixture(scope="session")
-def web_hooks_insight() -> InsightMetroRepository:
-    return Insight.create(Interface.WEB_HOOKS_INSIGHT, scheme=10)
+def web_hooks_insight() -> InsightMetroUnit:
+    return Insight.create(Interface.WEB_HOOKS_INSIGHT, scheme=10, formatter=Formatter.ATTRS_IN_LIST)
