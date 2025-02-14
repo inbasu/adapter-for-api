@@ -1,15 +1,16 @@
 from abc import ABC, abstractmethod
+from typing import Type
 
 from services.connections.base import Client
 from services.insight_repository.formatters import Formatter
 
-from .schemas import AttrValue, FieldScheme, InsightObject, ObjectAttr
+from .schemas import InsightObject
 
 
 class Unit(ABC):
     _client: Client
     _scheme: int
-    _formatter: Formatter
+    _formatter: Type[Formatter]
 
     @abstractmethod
     async def create_object(self, type_id: int, attrs: dict) -> InsightObject | None:
@@ -37,7 +38,7 @@ class InsightMetroUnit(Unit):
 
     """Object(s) methods"""
 
-    def __init__(self, client: Client, scheme: int, formatter: Formatter) -> None:
+    def __init__(self, client: Client, scheme: int, formatter: Type[Formatter]) -> None:
         self._client = client
         self._formatter = formatter
         self._scheme = scheme
@@ -59,10 +60,14 @@ class InsightMetroUnit(Unit):
             },
         }
         response = await self._client.post("/iql/run", data=json)
+        result = []  # займет лишнюю память, но уберет некорректные объекты
         if response.status_code == 200:
             fields = {f["id"]: self._formatter.decode_field(f) for f in response.data.get("objectTypeAttributes", [])}
             entries = response.data.get("objectEntries", [])
-            return [self._formatter.decode_get_object(obj, fields) for obj in entries]
+            for obj in entries:
+                if data := self._formatter.decode_get_object(obj, fields):
+                    result.append(data)
+        return result
 
     async def update_object(self, type_id: int, object_id: int, attrs: dict) -> InsightObject | None:
         json = {

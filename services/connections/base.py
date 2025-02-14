@@ -1,21 +1,23 @@
 import json
 import threading
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from abc import ABC, ABCMeta, abstractmethod
 
 from httpx import URL, AsyncClient
 from httpx import Response as R
 
 
-class Singletone:
-    _instance = None
+class Singletone(ABCMeta):
+    """метакласируем конекшены которые не хотим дублировать"""
+
+    _instance: dict = {}
     _lock = threading.Lock()
 
-    def __new__(cls):
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super(Singletone, cls).__new__(cls)
-            return cls._instance
+    def __new__(cls, *args, **kwargs):
+        if cls not in cls._instance:
+            with cls._lock:
+                if cls not in cls._instance:
+                    cls._instance[cls] = super(Singletone, cls).__new__(cls, *args, **kwargs)
+            return cls._instance[cls]
 
 
 class ClientCredentialsError(Exception):
@@ -36,7 +38,9 @@ class Response:
         return response.json()
 
 
-class Client(ABC):
+class Client(
+    ABC,
+):
     """Клиент предпочтителен с сессией и при токене предпочтительно синглтон"""
 
     def __init__(self, url: str, *args, **kwargs):

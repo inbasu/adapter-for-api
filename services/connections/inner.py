@@ -1,9 +1,9 @@
 from httpx import AsyncClient, BasicAuth
 
-from .base import Client, Response
+from .base import Client, Response, Singletone
 
 
-class MarsClient(Client):
+class MarsClient(Client, metaclass=Singletone):
     def __init__(self, url: str, username: str, password: str, auth_token: str, client_id: str) -> None:
         super().__init__(url, username, password, auth_token, client_id)
         self._token: str | None = None
