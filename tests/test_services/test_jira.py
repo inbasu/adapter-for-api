@@ -17,8 +17,6 @@ async def test_all_in_one(mars_jira):
     try:
         file = open("tests/lina.jpg", "rb")
         encoded = base64.b64encode(file.read()).decode("utf-8")
-        with open("1.txt", "w") as f:
-            f.write(encoded)
-        assert await mars_jira.upload_attachment(issue=result, file_name="my_file.jpg", file=encoded)
+        assert await mars_jira.upload_attachment(issue=result, file_name="lina.jpg", file=encoded)
     finally:
         file.close()
