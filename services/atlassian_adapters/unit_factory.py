@@ -3,10 +3,10 @@ from os import getenv
 
 from dotenv import load_dotenv
 
-from services.connections.inner import MarsClient, WebHooksClient
-from services.insight_repository.formatters import DefaultAssetToolFormatter, DictionaryFormatter
-from services.insight_repository.repository import InsightMetroUnit
-from services.jira_repository.repository import JiraMetroUnit
+from services.atlassian_adapters.connections.inner import MarsClient, WebHooksClient
+from services.atlassian_adapters.insight.formatters import DefaultAssetToolFormatter, DictionaryFormatter
+from services.atlassian_adapters.insight.unit import InsightMetroUnit
+from services.atlassian_adapters.jira.unit import JiraMetroUnit
 
 
 class Formatter(Enum):

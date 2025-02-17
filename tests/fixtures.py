@@ -1,8 +1,8 @@
 import pytest
 
-from services.insight_repository.repository import InsightMetroUnit
-from services.jira_repository.repository import JiraMetroUnit
-from services.repository_factories import Formatter, Insight, Interface, Jira, Project
+from services.atlassian_adapters.insight.unit import InsightMetroUnit
+from services.atlassian_adapters.jira.unit import JiraMetroUnit
+from services.atlassian_adapters.unit_factory import Formatter, Insight, Interface, Jira, Project
 
 
 @pytest.fixture(scope="session")
@@ -18,3 +18,10 @@ def web_hooks_insight() -> InsightMetroUnit:
 @pytest.fixture(scope="session")
 def mars_jira() -> JiraMetroUnit:
     return Jira.create(Interface.MARS_JIRA, Project.ITREQ)
+
+
+def get_attr(data: dict, field: str) -> list:
+    for attr in data.get("attrs", [{}]):
+        if attr["name"] == field:
+            return attr["values"]
+    return []

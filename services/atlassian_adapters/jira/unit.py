@@ -1,4 +1,4 @@
-from services.connections.base import Client
+from services.atlassian_adapters.connections.base import Client
 
 
 class JiraMetroUnit:

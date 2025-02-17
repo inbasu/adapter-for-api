@@ -1,6 +1,6 @@
 import pytest
 
-from services.repository_factories import Formatter, Insight, Interface
+from services.atlassian_adapters.unit_factory import Formatter, Insight, Interface
 
 
 @pytest.mark.asyncio

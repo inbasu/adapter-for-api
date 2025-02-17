@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Type
 
-from services.connections.base import Client
-from services.insight_repository.formatters import Formatter
-
-from .schemas import InsightObject
+from services.atlassian_adapters.connections.base import Client
+from services.atlassian_adapters.insight.formatters import Formatter
 
 
 class Unit(ABC):
@@ -13,15 +11,15 @@ class Unit(ABC):
     _formatter: Type[Formatter]
 
     @abstractmethod
-    async def create_object(self, type_id: int, attrs: dict) -> InsightObject | None:
+    async def create_object(self, type_id: int, attrs: dict) -> dict | None:
         """ """
 
     @abstractmethod
-    async def get_objects(self, iql: str, page: int, results: int) -> list:
+    async def get_objects(self, iql: str, page: int, results: int) -> list[dict]:
         """ """
 
     @abstractmethod
-    async def update_object(self, type_id: int, object_id: int, attrs: dict) -> InsightObject | None:
+    async def update_object(self, type_id: int, object_id: int, attrs: dict) -> dict | None:
         """ """
 
     @abstractmethod
@@ -43,12 +41,12 @@ class InsightMetroUnit(Unit):
         self._formatter = formatter
         self._scheme = scheme
 
-    async def create_object(self, type_id: int, attrs: dict) -> InsightObject | None:
+    async def create_object(self, type_id: int, attrs: dict) -> dict | None:
         json = {"scheme": self._scheme, "objectTypeId": type_id, "attributes": self._form_attributes(attrs)}
         response = await self._client.post("/create/run", data=json)
         return self._formatter.decode_create_object(response.data)
 
-    async def get_objects(self, iql: str, page: int = 1, results: int = 500) -> list[InsightObject]:
+    async def get_objects(self, iql: str, page: int = 1, results: int = 500) -> list[dict]:
         json = {
             "scheme": self._scheme,
             "iql": iql,
@@ -69,7 +67,7 @@ class InsightMetroUnit(Unit):
                     result.append(data)
         return result
 
-    async def update_object(self, type_id: int, object_id: int, attrs: dict) -> InsightObject | None:
+    async def update_object(self, type_id: int, object_id: int, attrs: dict) -> dict | None:
         json = {
             "scheme": self._scheme,
             "objectTypeId": type_id,
