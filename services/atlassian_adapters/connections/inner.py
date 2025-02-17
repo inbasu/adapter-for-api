@@ -18,7 +18,7 @@ class MarsClient(Client, metaclass=Singletone):
     @property
     def _session(self) -> AsyncClient:
         if not isinstance(self._the_session, AsyncClient):
-            return AsyncClient(base_url=self._url)
+            return AsyncClient(base_url=self._url, timeout=self._timeout)
         return self._the_session
 
     async def _update_token(self) -> None:
@@ -47,7 +47,7 @@ class WebHooksClient(Client):
     @property
     def _session(self) -> AsyncClient:
         if not isinstance(self._the_session, AsyncClient):
-            return AsyncClient(base_url=self._url, auth=self._auth)
+            return AsyncClient(base_url=self._url, auth=self._auth, timeout=self._timeout)
         return self._the_session
 
     async def post(self, url: str, data: dict, content_type="application/json") -> Response:

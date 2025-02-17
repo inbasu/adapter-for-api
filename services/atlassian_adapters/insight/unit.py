@@ -7,7 +7,7 @@ from services.atlassian_adapters.insight.formatters import Formatter
 
 class Unit(ABC):
     _client: Client
-    _scheme: int
+    _scheme: int  # Am i  need this?
     _formatter: Type[Formatter]
 
     @abstractmethod

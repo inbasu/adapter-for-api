@@ -4,6 +4,7 @@ from abc import ABC, ABCMeta, abstractmethod
 
 from httpx import URL, AsyncClient
 from httpx import Response as R
+from httpx import Timeout
 
 
 class Singletone(ABCMeta):
@@ -50,6 +51,7 @@ class Client(
             raise ClientCredentialsError("Присутствуют аргументы с нулеым значением, проверьте .env")
         self._url = URL(url)
         self._the_session: AsyncClient | None = None
+        self._timeout = Timeout(10.0, read=None)
 
     @property
     @abstractmethod
