@@ -31,7 +31,7 @@ class JiraMetroUnit:
         response = await self._client.post("/issue/run", data=json)
         return response.data.get("result", None)
 
-    async def get_issues(self):
+    async def get_issues(self, jql: str):
         raise NotImplementedError()
 
     async def update_issue(self, issue: str, fields: dict):
